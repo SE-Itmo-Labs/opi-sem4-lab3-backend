@@ -11,17 +11,17 @@ import jakarta.ws.rs.core.Response
 @Path("/point")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-class PointResource {
+open class PointResource {
     @POST
     @Path("/throw/")
     @Produces(MediaType.TEXT_PLAIN)
-    fun throwPoint(pointRequest : PointDto) : Response {
+    open fun throwPoint(pointRequest : PointDto) : Response {
         return Response.ok().entity(pointRequest).build()
     }
 
     @GET
     @Path("/test/")
-    fun test() : Response {
+    open fun test() : Response {
         return Response.ok().entity("{'test': 123}").build()
     }
 }

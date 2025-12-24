@@ -1,5 +1,6 @@
 package api.filters.authorization
 
+import api.ErrorResponse
 import api.ProjectHTTPHeaders
 import jakarta.annotation.Priority
 import jakarta.ws.rs.Priorities
@@ -15,11 +16,11 @@ class AuthorizationFilter : ContainerRequestFilter {
     companion object {
         private val RESPONSE_UNAUTHORIZED = Response
             .status(Response.Status.UNAUTHORIZED)
-            .entity("Иди регайся")
+            .entity(ErrorResponse().error("Иди регайся"))
             .build()
 
         private val PUBLIC_PATHS = setOf(
-            "/api/user/auth"
+            "user/auth"
         )
     }
 
@@ -33,10 +34,6 @@ class AuthorizationFilter : ContainerRequestFilter {
     }
 
     private fun isPublicPath(requestPath: String): Boolean {
-
-        return PUBLIC_PATHS.any {publicPath ->
-            val normalized = publicPath.removePrefix("/api/")
-            requestPath == normalized
-        }
+        return PUBLIC_PATHS.contains(requestPath.removeSuffix("/"))
     }
 }
