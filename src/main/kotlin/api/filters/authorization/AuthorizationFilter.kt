@@ -20,7 +20,7 @@ class AuthorizationFilter : ContainerRequestFilter {
             .build()
 
         private val PUBLIC_PATHS = setOf(
-            "user/auth"
+            "/user/auth"
         )
     }
 
@@ -34,6 +34,6 @@ class AuthorizationFilter : ContainerRequestFilter {
     }
 
     private fun isPublicPath(requestPath: String): Boolean {
-        return PUBLIC_PATHS.contains(requestPath.removeSuffix("/"))
+        return PUBLIC_PATHS.contains(requestPath)
     }
 }
