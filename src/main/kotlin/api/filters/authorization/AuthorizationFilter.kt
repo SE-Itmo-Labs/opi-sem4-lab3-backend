@@ -1,8 +1,11 @@
 package api.filters.authorization
 
+import JwtUtil
 import api.ErrorResponse
 import api.ProjectHTTPHeaders
 import jakarta.annotation.Priority
+import jakarta.enterprise.context.RequestScoped
+import jakarta.inject.Inject
 import jakarta.ws.rs.Priorities
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
@@ -11,7 +14,11 @@ import jakarta.ws.rs.ext.Provider
 
 @Provider
 @Priority(Priorities.AUTHORIZATION)
-class AuthorizationFilter : ContainerRequestFilter {
+@RequestScoped
+open class AuthorizationFilter : ContainerRequestFilter {
+
+    @Inject
+    private lateinit var jwtUtil: JwtUtil
 
     companion object {
         private val RESPONSE_UNAUTHORIZED = Response
@@ -22,6 +29,8 @@ class AuthorizationFilter : ContainerRequestFilter {
         private val PUBLIC_PATHS = setOf(
             "/user/auth",
             "/user/register",
+            "/user/auth/",
+            "/user/register/"
         )
     }
 
@@ -31,7 +40,9 @@ class AuthorizationFilter : ContainerRequestFilter {
 
         val authHeader = requestContext.getHeaderString(ProjectHTTPHeaders.AUTHORIZATION)
 
-        if (authHeader.isNullOrEmpty()) requestContext.abortWith(RESPONSE_UNAUTHORIZED)
+        if (authHeader.isNullOrEmpty() || !jwtUtil.validateToken(authHeader)) {
+            requestContext.abortWith(RESPONSE_UNAUTHORIZED)
+        }
     }
 
     private fun isPublicPath(requestPath: String): Boolean {

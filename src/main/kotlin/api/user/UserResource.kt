@@ -32,9 +32,7 @@ open class UserResource : GenericResource() {
         val password = user.password ?: return badRequest("Где password")
 
         val authenticatedUser = userService.authenticate(username, password)
-        if (authenticatedUser == null) {
-            return unauthorized("Неверный пароль ввел, или юзернейм?")
-        }
+            ?: return unauthorized("Неверный пароль ввел, или юзернейм?")
 
         val token = jwtUtil.generateToken(username)
         return Response.ok(mapOf("token" to token)).build()
@@ -42,7 +40,7 @@ open class UserResource : GenericResource() {
 
     @POST
     @Path("/register/")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     open fun register(user : UserDto) : Response {
 
         val username = user.username ?: return badRequest("Где username")

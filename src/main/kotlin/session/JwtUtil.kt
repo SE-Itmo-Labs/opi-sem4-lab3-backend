@@ -8,7 +8,7 @@ import javax.crypto.SecretKey
 @ApplicationScoped
 open class JwtUtil {
 
-    open val DEFAULT_EXPIRATION_MS = 1000 * 60 * 60 // 1 hour
+    open val DEFAULT_EXPIRATION_MS = 1000 * 60 * 60 * 24 // 24 h
     open val JWT_SECRET = "your-secret-key-here-please-use-secure-key-in-production"
 
     open val signingKey: SecretKey
