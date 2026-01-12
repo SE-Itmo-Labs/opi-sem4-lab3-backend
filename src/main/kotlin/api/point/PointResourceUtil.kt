@@ -4,6 +4,7 @@ import database.model.Point2DRow
 import jakarta.json.Json
 
 open class PointResourceUtil {
+
     companion object {
         open fun buildJsonArray(points: List<Point2DRow>): jakarta.json.JsonArray {
             val arrayBuilder = Json.createArrayBuilder()
@@ -23,4 +24,5 @@ open class PointResourceUtil {
             return arrayBuilder.build()
         }
     }
+
 }

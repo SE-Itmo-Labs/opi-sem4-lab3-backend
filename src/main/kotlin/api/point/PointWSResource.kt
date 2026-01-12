@@ -2,10 +2,12 @@ package api.point
 
 import JwtUtil
 import api.configs.AuthConfig
+import database.model.Point2DRow
 import database.repositories.DBPointsRepository
 import database.repositories.DBUserRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
+import jakarta.json.Json
 import jakarta.websocket.*
 import jakarta.websocket.server.PathParam
 import jakarta.websocket.server.ServerEndpoint
@@ -35,14 +37,36 @@ open class PointWSResource {
             session.close(CloseReason(CloseReason.CloseCodes.VIOLATED_POLICY, "Invalid token"))
             return
         }
-
         val user = userRepository.findByUsername(username)!!
-
         userSessions.getOrPut(user.id!!) { mutableSetOf() }.add(session)
+    }
 
-        val points = pointsRepository.findAllByUser(user.id!!)
+    open fun broadcastToAll(message: String) {
+        userSessions.values.flatten().forEach { session ->
+            if (session.isOpen) {
+                session.asyncRemote.sendText(message)
+            }
+        }
+    }
 
-        session.asyncRemote.sendText(PointResourceUtil.buildJsonArray(points).toString())
+    open fun broadcastNewPoint(point: Point2DRow) {
+        val json = Json.createObjectBuilder()
+            .add("id", point.id ?: -1)
+            .add("x", point.point2DR.x.toDouble())
+            .add("y", point.point2DR.y.toDouble())
+            .add("R", point.point2DR.R.toDouble())
+            .add("inArea", point.inArea)
+            .add("executionTime", point.executionTime)
+            .add("timestamp", point.formattedTimestamp)
+            .add("username", point.user.username)
+            .build()
+            .toString()
+
+        userSessions.values.flatten().forEach { session ->
+            if (session.isOpen) {
+                session.asyncRemote.sendText(json)
+            }
+        }
     }
 
     @OnClose

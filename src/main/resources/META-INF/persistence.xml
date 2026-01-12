@@ -19,6 +19,7 @@
             <property name="eclipselink.target-server" value="JBoss"/>
             <property name="eclipselink.jta.transaction.manager"
                       value="java:jboss/TransactionManager"/>
+            <property name="eclipselink.logging.level" value="WARNING"/>
 
             <!-- Включение логирования SQL -->
             <property name="eclipselink.logging.level.sql" value="FINE"/>

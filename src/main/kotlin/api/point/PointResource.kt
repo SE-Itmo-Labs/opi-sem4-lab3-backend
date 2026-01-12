@@ -14,6 +14,7 @@ import database.model.Point2DRow
 import database.repositories.DBPointsRepository
 import database.repositories.DBUserRepository
 import jakarta.inject.Inject
+import jakarta.json.Json
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.core.HttpHeaders
@@ -107,7 +108,10 @@ open class PointResource : GenericResource() {
         val res = responseBuilder.ok("Point has been thrown")
 
         // Бродкастим тут
-        webSocket.broadcastToUser(user.id!!, res.toString())
+//        webSocket.broadcastToUser(user.id!!, res.toString())
+//        webSocket.broadcastToAll(res.toString())
+
+        webSocket.broadcastNewPoint(pointRow)
 
         return Response.ok(res).build()
     }
