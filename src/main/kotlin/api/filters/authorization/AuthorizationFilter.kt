@@ -3,21 +3,18 @@ package api.filters.authorization
 import JwtUtil
 import api.GenericResource
 import api.ProjectHTTPHeaders
-import api.response.GeneralResponseBuilder
 import jakarta.annotation.Priority
 import jakarta.enterprise.context.RequestScoped
 import jakarta.inject.Inject
 import jakarta.ws.rs.Priorities
 import jakarta.ws.rs.container.ContainerRequestContext
 import jakarta.ws.rs.container.ContainerRequestFilter
-import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.ext.Provider
 
 @Provider
 @Priority(Priorities.AUTHORIZATION)
 @RequestScoped
 open class AuthorizationFilter : ContainerRequestFilter {
-
     @Inject
     private lateinit var jwtUtil: JwtUtil
 
@@ -27,21 +24,21 @@ open class AuthorizationFilter : ContainerRequestFilter {
 //            .entity(ErrorResponse().error("Иди регайся"))
 //            .build()
 
-        private val PUBLIC_PATHS = setOf(
-            "/user/auth",
-            "/user/register"
-        )
+        private val PUBLIC_PATHS =
+            setOf(
+                "/user/auth",
+                "/user/register",
+            )
     }
 
     override fun filter(requestContext: ContainerRequestContext) {
-
         if (isPublicPath(requestContext.uriInfo.path)) return
 
         val authHeader = requestContext.getHeaderString(ProjectHTTPHeaders.AUTHORIZATION)
 
         if (authHeader.isNullOrEmpty() || !jwtUtil.validateToken(authHeader)) {
             requestContext.abortWith(
-                GenericResource.unauthorized("Иди регайся")
+                GenericResource.unauthorized("Иди регайся"),
             )
         }
     }

@@ -6,18 +6,19 @@ import java.nio.charset.StandardCharsets
 
 @ApplicationScoped
 open class PasswordEncoder {
-
     open fun hash(password: String): String {
-        val hasher = BCrypt.withDefaults();
+        val hasher = BCrypt.withDefaults()
         val bytes = hasher.hash(12, password.toCharArray())
 
         return String(bytes, StandardCharsets.UTF_8)
     }
 
-    open fun verify(password: String, hashedPassword: String): Boolean {
-        return BCrypt
+    open fun verify(
+        password: String,
+        hashedPassword: String,
+    ): Boolean =
+        BCrypt
             .verifyer()
             .verify(password.toCharArray(), hashedPassword.toCharArray())
             .verified
-    }
 }

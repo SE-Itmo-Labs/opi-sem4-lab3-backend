@@ -5,7 +5,6 @@ import api.GenericResource
 import api.ProjectHTTPHeaders
 import api.response.GeneralResponseBuilder
 import jakarta.inject.Inject
-import jakarta.json.Json
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.POST
@@ -21,7 +20,6 @@ import service.UserService
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 open class UserResource : GenericResource() {
-
     @Inject
     private lateinit var jwtUtil: JwtUtil
 
@@ -30,15 +28,15 @@ open class UserResource : GenericResource() {
 
     @POST
     @Path("/auth/")
-    open fun auth(user: UserDto) : Response {
-
+    open fun auth(user: UserDto): Response {
         val username = user.username ?: return badRequest("Где username")
         val password = user.password ?: return badRequest("Где password")
 
         val response = GeneralResponseBuilder()
 
-        val authenticatedUser = userService.authenticate(username, password)
-            ?: return unauthorized("Неверный пароль ввел, или юзернейм?")
+        val authenticatedUser =
+            userService.authenticate(username, password)
+                ?: return unauthorized("Неверный пароль ввел, или юзернейм?")
 
         val token = jwtUtil.generateToken(username)
 
@@ -49,14 +47,11 @@ open class UserResource : GenericResource() {
 
     @POST
     @Path("/logout/")
-    open fun logout(): Response {
-        return ok("Logged out")
-    }
+    open fun logout(): Response = ok("Logged out")
 
     @POST
     @Path("/register/")
-    open fun register(user : UserDto) : Response {
-
+    open fun register(user: UserDto): Response {
         val username = user.username ?: return badRequest("Где username")
         val password = user.password ?: return badRequest("Где password")
 
@@ -70,13 +65,17 @@ open class UserResource : GenericResource() {
 
     @DELETE
     @Path("/delete/")
-    open fun delete(@Context headers: HttpHeaders, user: UserDto) : Response {
+    open fun delete(
+        @Context headers: HttpHeaders,
+        user: UserDto,
+    ): Response {
+        val authHeader =
+            headers.getHeaderString(ProjectHTTPHeaders.AUTHORIZATION)
+                ?: return unauthorized("Токен отсутствует")
 
-        val authHeader = headers.getHeaderString(ProjectHTTPHeaders.AUTHORIZATION)
-            ?: return unauthorized("Токен отсутствует")
-
-        val currentUsername = jwtUtil.getUsernameFromToken(authHeader)
-            ?: return unauthorized("Невалидный токен")
+        val currentUsername =
+            jwtUtil.getUsernameFromToken(authHeader)
+                ?: return unauthorized("Невалидный токен")
 
         val requestedUsername = user.username
         if (requestedUsername != null && requestedUsername != currentUsername) {

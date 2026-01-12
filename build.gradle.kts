@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm") version "2.1.20"
     war
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
+//    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
 }
 
 group = "com.ssnagin"
@@ -53,7 +53,7 @@ tasks.war {
     archiveFileName.set("lab4.war")
 }
 
-ktlint {
-    version.set("1.3.1")
-    verbose.set(true)
-}
+//ktlint {
+//    version.set("1.3.1")
+//    verbose.set(true)
+//}

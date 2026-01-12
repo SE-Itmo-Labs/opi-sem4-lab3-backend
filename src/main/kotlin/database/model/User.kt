@@ -9,16 +9,14 @@ import jakarta.persistence.Table
 
 @Entity
 @Table(name = "lab_users")
-open class User (
+open class User(
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     var id: Long? = null,
-
     @Column(unique = true, nullable = false)
     var username: String,
-
     @Column(nullable = false)
-    var password: String
+    var password: String,
 ) {
     constructor() : this(
         null,

@@ -8,7 +8,7 @@ class AuthConfig : ServerEndpointConfig.Configurator() {
     override fun modifyHandshake(
         conf: ServerEndpointConfig,
         request: HandshakeRequest,
-        response: HandshakeResponse
+        response: HandshakeResponse,
     ) {
         super.modifyHandshake(conf, request, response)
     }

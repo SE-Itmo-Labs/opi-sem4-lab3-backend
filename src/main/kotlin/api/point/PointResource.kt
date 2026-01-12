@@ -7,14 +7,12 @@ import api.point.PointResourceUtil.Companion.buildJsonArray
 import api.response.GeneralResponseBuilder
 import coordinates.builders.Point2DRBuilder
 import coordinates.exceptions.PointOutOfBoundariesException
-import coordinates.geometry.Point2DR
 import coordinates.validator.GeometryValidator
 import database.model.DotType
 import database.model.Point2DRow
 import database.repositories.DBPointsRepository
 import database.repositories.DBUserRepository
 import jakarta.inject.Inject
-import jakarta.json.Json
 import jakarta.ws.rs.*
 import jakarta.ws.rs.core.Context
 import jakarta.ws.rs.core.HttpHeaders
@@ -27,7 +25,6 @@ import java.time.LocalDateTime
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 open class PointResource : GenericResource() {
-
     @Inject
     private lateinit var pointsRepository: DBPointsRepository
 
@@ -45,29 +42,27 @@ open class PointResource : GenericResource() {
     @POST
     @Path("/throw/")
     @Produces(MediaType.TEXT_PLAIN)
-    open fun throwPoint(pointRequest : PointDto) : Response {
-        return Response.ok().entity(pointRequest).build()
-    }
+    open fun throwPoint(pointRequest: PointDto): Response = Response.ok().entity(pointRequest).build()
 
     @GET
     @Path("/test/")
-    open fun test() : Response {
-        return Response.ok().entity("{'test': 123}").build()
-    }
+    open fun test(): Response = Response.ok().entity("{'test': 123}").build()
 
     @POST
     @Path("/save/")
     open fun save(
         @Context headers: HttpHeaders,
-        pointDto: PointDto
-    ) : Response {
+        pointDto: PointDto,
+    ): Response {
         val token = headers.getHeaderString(ProjectHTTPHeaders.AUTHORIZATION)
 
-        val username = jwtUtil.getUsernameFromToken(token)
-            ?: return unauthorized("Невалидный токен")
+        val username =
+            jwtUtil.getUsernameFromToken(token)
+                ?: return unauthorized("Невалидный токен")
 
-        val user = userRepository.findByUsername(username)
-            ?: return unauthorized("Пользователь не найден")
+        val user =
+            userRepository.findByUsername(username)
+                ?: return unauthorized("Пользователь не найден")
 
         val responseBuilder = GeneralResponseBuilder()
 
@@ -81,23 +76,22 @@ open class PointResource : GenericResource() {
             geometryValidator.validate(point2DR)
             inArea = true
         } catch (e: PointOutOfBoundariesException) {
-
-        }
-        catch (e: IllegalArgumentException) {
+        } catch (e: IllegalArgumentException) {
             return badRequest(e.message!!)
         }
 
         val endTime = System.nanoTime()
         val executionTime = (endTime - startTime)
 
-        val pointRow = Point2DRow(
-            user = user,
-            type = DotType.SIMPLE,
-            point2DR = point2DR,
-            timestamp = LocalDateTime.now().plusHours(3),
-            executionTime = executionTime,
-            inArea = inArea
-        )
+        val pointRow =
+            Point2DRow(
+                user = user,
+                type = DotType.SIMPLE,
+                point2DR = point2DR,
+                timestamp = LocalDateTime.now().plusHours(3),
+                executionTime = executionTime,
+                inArea = inArea,
+            )
 
         pointsRepository.save(pointRow)
 
@@ -128,14 +122,18 @@ open class PointResource : GenericResource() {
 
     @GET
     @Path("/my")
-    open fun getMyPoints(@Context headers: HttpHeaders): Response {
+    open fun getMyPoints(
+        @Context headers: HttpHeaders,
+    ): Response {
         val token = headers.getHeaderString(ProjectHTTPHeaders.AUTHORIZATION)
 
-        val username = jwtUtil.getUsernameFromToken(token)
-            ?: return unauthorized("Невалидный токен")
+        val username =
+            jwtUtil.getUsernameFromToken(token)
+                ?: return unauthorized("Невалидный токен")
 
-        val user = userRepository.findByUsername(username)
-            ?: return unauthorized("Пользователь не найден")
+        val user =
+            userRepository.findByUsername(username)
+                ?: return unauthorized("Пользователь не найден")
 
         val myPoints = pointsRepository.findAllByUser(user.id!!)
         val response = GeneralResponseBuilder()
@@ -150,18 +148,21 @@ open class PointResource : GenericResource() {
     @Produces(MediaType.APPLICATION_JSON)
     open fun deletePoint(
         @Context headers: HttpHeaders,
-        @PathParam("id") id: Long
+        @PathParam("id") id: Long,
     ): Response {
         val token = headers.getHeaderString(ProjectHTTPHeaders.AUTHORIZATION)
 
-        val username = jwtUtil.getUsernameFromToken(token)
-            ?: return unauthorized("Невалидный токен")
+        val username =
+            jwtUtil.getUsernameFromToken(token)
+                ?: return unauthorized("Невалидный токен")
 
-        val user = userRepository.findByUsername(username)
-            ?: return unauthorized("Пользователь не найден")
+        val user =
+            userRepository.findByUsername(username)
+                ?: return unauthorized("Пользователь не найден")
 
-        val point = pointsRepository.findById(id, Point2DRow::class.java)
-            ?: return badRequest("Точка не найдена")
+        val point =
+            pointsRepository.findById(id, Point2DRow::class.java)
+                ?: return badRequest("Точка не найдена")
 
         if (point.user.id != user.id) {
             return badRequest("Свои точки только можно удалять, ненене)")
@@ -177,14 +178,18 @@ open class PointResource : GenericResource() {
 
     @DELETE
     @Path("/my")
-    open fun deleteAllMyPoints(@Context headers: HttpHeaders): Response {
+    open fun deleteAllMyPoints(
+        @Context headers: HttpHeaders,
+    ): Response {
         val token = headers.getHeaderString(ProjectHTTPHeaders.AUTHORIZATION)
 
-        val username = jwtUtil.getUsernameFromToken(token)
-            ?: return unauthorized("Невалидный токен")
+        val username =
+            jwtUtil.getUsernameFromToken(token)
+                ?: return unauthorized("Невалидный токен")
 
-        val user = userRepository.findByUsername(username)
-            ?: return unauthorized("Пользователь не найден")
+        val user =
+            userRepository.findByUsername(username)
+                ?: return unauthorized("Пользователь не найден")
 
         pointsRepository.deleteAllByUser(user.id!!)
         return ok("All of your points have been deleted!")

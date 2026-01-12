@@ -19,43 +19,37 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Entity
-@Table(name = "lab_points", indexes = [
-    Index(name = "idx_user_id", columnList = "user_id")
-])
+@Table(
+    name = "lab_points",
+    indexes = [
+        Index(name = "idx_user_id", columnList = "user_id"),
+    ],
+)
 open class Point2DRow(
-
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     var id: Long? = null,
-
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     var user: User,
-
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     var type: DotType,
-
     @Embedded
     var point2DR: Point2DR,
-
     @Column(nullable = false)
     var timestamp: LocalDateTime = LocalDateTime.now().plusHours(3),
-
     @Column(nullable = false)
     var executionTime: Long = 0,
-
     @Column(nullable = false)
     var inArea: Boolean = false,
-
     @Transient
     var formattedTimestamp: String =
         timestamp.format(
             DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"),
         ),
 ) {
-
-//    constructor() : this(
+    //    constructor() : this(
 //        id = null,
 //        point2DR = Point2DR(0f, 0f, 0f),
 //        timestamp = LocalDateTime.now().plusHours(3),
@@ -69,14 +63,15 @@ open class Point2DRow(
     constructor() : this(
         user = User(),
         type = DotType.SIMPLE,
-        point2DR = Point2DR()
+        point2DR = Point2DR(),
     )
 
     @PostLoad
     @PrePersist
     open fun updateFormattedTimestamp() {
-        this.formattedTimestamp = this.timestamp.format(
-            DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")
-        )
+        this.formattedTimestamp =
+            this.timestamp.format(
+                DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"),
+            )
     }
 }
