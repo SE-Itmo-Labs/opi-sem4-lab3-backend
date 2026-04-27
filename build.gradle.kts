@@ -53,6 +53,62 @@ tasks.war {
     archiveFileName.set("lab4.war")
 }
 
+// 1. Compile
+
+tasks.register("compile") {
+    dependsOn(tasks.compileKotlin)
+}
+
+// 2. Build
+
+tasks.named("build") {
+
+    dependsOn("compile")
+
+    doLast {
+        var path = tasks.war.get().archiveFile.get().asFile.absolutePath
+
+        logger.info("WAR Path: $path")
+    }
+}
+
+// 3. Clean
+
+tasks.named("clean2") {
+
+    
+
+    doLast {
+
+    }
+
+}
+
+// 7. Music
+
+tasks.register("music") {
+
+    val snMusicPath = project.findProperty("sn.music.path")
+
+    println(snMusicPath)
+
+    doLast {
+        val os = System.getProperty("os.name").lowercase()
+        println(os)
+
+        when {
+            os.contains("win") -> exec {
+                commandLine("cmd", "/c", "start", "/min", snMusicPath)
+            }
+
+            os.contains("linux") -> exec {
+                commandLine("ffplay", "-nodisp", "-autoexit", snMusicPath)
+            }
+        }
+
+    }
+}
+
 //ktlint {
 //    version.set("1.3.1")
 //    verbose.set(true)
