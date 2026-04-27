@@ -40,17 +40,8 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
-
 kotlin {
     jvmToolchain(17)
-}
-
-tasks.war {
-    webAppDirectory = file("src/main/webapp")
-    archiveFileName.set("lab4.war")
 }
 
 // 1. Compile
@@ -59,34 +50,41 @@ tasks.register("compile") {
     dependsOn(tasks.compileKotlin)
 }
 
-// 2. Build
+// 2. Build - уже есть
+
+tasks.war {
+    webAppDirectory = file("src/main/webapp")
+    archiveFileName.set("lab4.war")
+}
 
 tasks.named("build") {
 
+    setDependsOn(emptyList<Any>())
+
+    // Новые зависимости для сборки
     dependsOn("compile")
+    dependsOn("war")
 
     doLast {
-        var path = tasks.war.get().archiveFile.get().asFile.absolutePath
-
-        logger.info("WAR Path: $path")
+        println("Sources were successfully built: " + "lab4.war")
     }
 }
 
-// 3. Clean
+// 3. Clean - уже есть
 
-tasks.named("clean2") {
+// 4. Test
 
-    
+tasks.test {
 
-    doLast {
+    dependsOn("build")
 
-    }
-
+    useJUnitPlatform()
 }
 
-// 7. Music
+// 5. Music
 
 tasks.register("music") {
+    dependsOn("build")
 
     val snMusicPath = project.findProperty("sn.music.path")
 
@@ -107,6 +105,13 @@ tasks.register("music") {
         }
 
     }
+}
+
+
+// 6. Alt
+
+tasks.register("alt") {
+
 }
 
 //ktlint {
