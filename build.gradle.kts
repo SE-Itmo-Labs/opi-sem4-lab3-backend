@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm") version "2.1.20"
     war
@@ -108,12 +110,75 @@ tasks.register("music") {
 }
 
 
-// 6. Alt
+val altSourceDir = layout.buildDirectory.dir("alt-src")
 
-tasks.register("alt") {
+// Подготавливаем исходники (копируем и заменяем)
+tasks.register<Copy>("prepareAltSources") {
+    from("src/main/kotlin")
+    into(altSourceDir)
 
+    // Переименовываем файлы
+    rename { fileName ->
+        fileName
+            .replace("PointResource.kt", "AltPointResource.kt")
+            .replace("UserResource.kt", "AltUserResource.kt")
+            .replace("PointWSResource.kt", "AltPointWSResource.kt")
+            .replace("PointDto.kt", "AltPointDto.kt")
+    }
+
+    // Заменяем текст внутри файлов
+    filter { line ->
+        line
+            .replace("PointResource", "AltPointResource")
+            .replace("UserResource", "AltUserResource")
+            .replace("PointWSResource", "AltPointWSResource")
+            .replace("PointDto", "AltPointDto")
+            .replace("username", "altUsername")
+            .replace("password", "altPassword")
+    }
 }
 
+// 1. Создаем отдельный Source Set для "alt".
+// Gradle и плагин Kotlin АВТОМАТИЧЕСКИ создадут задачу "compileAltKotlin"
+sourceSets {
+    create("alt") {
+        // Директория с трансформированными исходниками
+        java.srcDir(altSourceDir)
+
+        // Подтягиваем зависимости из основной сборки, чтобы классы "увидели" внешние библиотеки (JWT, Jackson и т.д.)
+        compileClasspath += sourceSets.main.get().compileClasspath
+    }
+}
+
+// 2. Указываем, что компиляция alt-исходников должна начинаться только ПОСЛЕ их копирования и модификации
+tasks.named("compileAltKotlin") {
+    dependsOn("prepareAltSources")
+}
+
+// 3. Собираем JAR
+tasks.register<Jar>("altJar") {
+    dependsOn("compileAltKotlin")
+    archiveBaseName.set("lab4" + "-alt")
+    archiveVersion.set("1.0")
+
+    // Берем скомпилированные классы из нового SourceSet
+    from(sourceSets["alt"].output)
+
+    // Берем ресурсы из основной папки ресурсов
+    from("src/main/resources") {
+        include("**/*")
+    }
+
+    doLast {
+        println("✅ Alt JAR: ${archiveFile.get().asFile.absolutePath}")
+    }
+}
+
+// 4. Главная цель (target) alt
+tasks.register("alt") {
+    dependsOn("build")
+    dependsOn("altJar")
+}
 //ktlint {
 //    version.set("1.3.1")
 //    verbose.set(true)
