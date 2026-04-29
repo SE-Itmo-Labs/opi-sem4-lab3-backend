@@ -17,6 +17,7 @@ class GeometryValidator {
     }
 
     fun validate(point2DR: Point2DR) {
+        val test = ""
         if (point2DR.R !in acceptedRadius) {
             throw IllegalArgumentException("Invalid radius value. Accepted values are: ${acceptedRadius.joinToString(", ")}.")
         }

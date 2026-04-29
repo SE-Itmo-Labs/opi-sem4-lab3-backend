@@ -1,7 +1,8 @@
+import org.jetbrains.kotlin.metadata.deserialization.VersionRequirementTable.Companion.create
+
 plugins {
     kotlin("jvm") version "2.1.20"
     war
-    id("org.wildfly.build.provision") version "0.0.11"
 //    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
 }
 
@@ -114,10 +115,6 @@ tasks.register("music") {
         println(os)
 
         when {
-            os.contains("win") -> exec {
-                commandLine("cmd", "/c", "start", "/min", snMusicPath)
-            }
-
             os.contains("linux") -> exec {
                 commandLine("ffplay", "-nodisp", "-autoexit", snMusicPath)
             }
@@ -125,6 +122,8 @@ tasks.register("music") {
 
     }
 }
+
+// вынести в функцию?
 
 val altSrcName = project.findProperty("sn.alt.src.dir.name")
 
@@ -168,12 +167,20 @@ tasks.register<Copy>("prepareAltSources") {
     filter { line ->
         var modifiedLine = line
 
-        // PointResource -> AltPointResource
+        // Class -> AltClass
         sortedClasses.forEach { className ->
             modifiedLine = modifiedLine.replace("\\b$className\\b".toRegex(), "Alt$className")
         }
 
-        // var/val username -> altUsername
+        // Alt -> AltAlt - описать в параметрах + смотреть исключения
+        // Вынести регулярки, разобраться какие переменные можно и нужно использовать в глобальной области видимости (если надо обернуть в функцию)
+        // Ещё раз разобраться и переписать код на alt
+
+        //
+
+        // Сделать музыку на fail
+
+        // var/val test -> altTest
         sortedVars.forEach { varName ->
             val altVarName = "alt" + varName.replaceFirstChar { it.uppercase() }
             modifiedLine = modifiedLine.replace("\\b$varName\\b".toRegex(), altVarName)
@@ -181,14 +188,12 @@ tasks.register<Copy>("prepareAltSources") {
 
         modifiedLine
     }
-
 }
 
 sourceSets {
 
     create("alt") {
-
-        java.srcDir(altSourceDir)
+        java.srcDir(altSourceDir.toString())
         compileClasspath += sourceSets.main.get().compileClasspath
     }
 }
