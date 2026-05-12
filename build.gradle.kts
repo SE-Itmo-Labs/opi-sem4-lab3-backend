@@ -62,6 +62,7 @@ var warDirectory = project.findProperty("sn.war.directory")
 // MUSIC
 
 val snMusicPath = project.findProperty("sn.music.path")
+val snMusicErrorPath = project.findProperty("sn.music_error.path")
 
 // ALT
 
@@ -203,6 +204,7 @@ tasks.named("compileAltKotlin") {
 }
 
 tasks.register<Jar>("altJar") {
+
     dependsOn("compileAltKotlin")
     archiveBaseName.set("$projectName-alt")
     archiveVersion.set(projectVersion.toString())
