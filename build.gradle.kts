@@ -110,38 +110,34 @@ tasks.register("music") {
     }
 }
 
-// вынести в функцию?
-
-
-
-val altSrcName = project.findProperty("sn.alt.src.dir.name")
-val altSourceDir = layout.buildDirectory.dir(altSrcName.toString())
-val kotlinDir = project.findProperty("sn.alt.kotlin.dir")
-
-// Считываем регулярки из properties (или ставим дефолт, если не нашли)
-val varDeclRegexProp = project.findProperty("sn.alt.regex.var_declaration")?.toString()
-    ?: "\\b(?:val|var)\\s+(`[^`]+`|[\\p{L}_][\\p{L}\\d_]*)"
-val varReplaceRegexProp = project.findProperty("sn.alt.regex.var_replace")?.toString()
-    ?: "(?<![\\p{L}\\d_])%s(?![\\p{L}\\d_])"
-val classReplaceRegexProp = project.findProperty("sn.alt.regex.class_replace")?.toString()
-    ?: "(?<![\\p{L}\\d_])%s(?![\\p{L}\\d_])"
-
-
 tasks.register("prepareAltSources") {
-    val srcDir = file(kotlinDir.toString())
+
+    val altSrcName = project.findProperty("sn.alt.src.dir.name").toString()
+    val altSourceDir = layout.buildDirectory.dir(altSrcName)
+    val kotlinDir = project.findProperty("sn.alt.kotlin.dir").toString()
+
+    val varDeclRegexProp = project.findProperty("sn.alt.regex.var_declaration").toString()
+    val varReplaceRegexProp = project.findProperty("sn.alt.regex.var_replace").toString()
+    val classReplaceRegexProp = project.findProperty("sn.alt.regex.class_replace").toString()
+
+    val filesFilter = project.findProperty("sn.alt.regex.files_filter").toString()
+
+    val srcDir = file(kotlinDir)
     val destDir = altSourceDir.get().asFile
 
     inputs.dir(srcDir)
     outputs.dir(destDir)
 
     doLast {
+
         val projectClasses = mutableSetOf<String>()
         val projectVars = mutableSetOf<String>()
         val varDeclRegex = varDeclRegexProp.toRegex()
 
-
         if (srcDir.exists()) {
-            fileTree(srcDir).matching { include("**/*.kt") }.forEach { file ->
+            fileTree(srcDir).matching {
+                include(filesFilter)
+            }.forEach { file ->
                 projectClasses.add(file.nameWithoutExtension)
 
                 file.readLines().forEach { line ->
@@ -156,10 +152,7 @@ tasks.register("prepareAltSources") {
         }
 
         val ignoredVars = setOf(
-            "id", "message", "status", "body", "e", "it", "x", "y",
-            "data", "class", "val", "var", "fun", "if", "else", "for", "while", "return", "this", "super", "object", "is", "as", "in", "typealias", "package", "import", "true", "false", "null",
-            "AUTHORIZATION", "OK", "BAD_REQUEST", "UNAUTHORIZED", "CONFLICT",
-            "json" // <--- ДОБАВЛЯЕМ СЮДА
+            "id", "message", "status", "body", "e", "it", "x", "y", "data", "class", "val", "var", "fun", "if", "else", "for", "while", "return", "this", "super", "object", "is", "as", "in", "typealias", "package", "import", "true", "false", "null",  "AUTHORIZATION", "OK", "BAD_REQUEST", "UNAUTHORIZED", "CONFLICT", "json"
         )
         projectVars.removeAll(ignoredVars)
 
@@ -171,10 +164,13 @@ tasks.register("prepareAltSources") {
         destDir.mkdirs()
 
         if (srcDir.exists()) {
-            fileTree(srcDir).matching { include("**/*.kt") }.forEach { file ->
+            fileTree(srcDir).matching { include(filesFilter) }.forEach { file ->
                 val relativePath = file.relativeTo(srcDir)
                 val newFileName = if (file.name.endsWith(".kt")) "Alt${file.name}" else file.name
-                val destFile = File(destDir, relativePath.parentFile?.path?.let { "$it/$newFileName" } ?: newFileName)
+                val destFile = File(destDir, relativePath.parentFile.path.let {
+                    "$it/$newFileName"
+                }
+                )
                 destFile.parentFile.mkdirs()
 
                 var content = file.readText()
@@ -190,18 +186,21 @@ tasks.register("prepareAltSources") {
                     if (trimmed.startsWith("package ") || trimmed.startsWith("import ")) {
                         line
                     } else {
-                        var modifiedLine = line
-                        sortedVars.forEach { varName ->
-                            val isBackticked = varName.startsWith("`") && varName.endsWith("`")
-                            val cleanName = if (isBackticked) varName.substring(1, varName.length - 1) else varName
 
-                            val altVarName = if (isBackticked) {
+                        var modifiedLine = line
+
+                        sortedVars.forEach { varName ->
+
+                            val flag = varName.startsWith("`") && varName.endsWith("`")
+                            val cleanName = if (flag) varName.substring(1, varName.length - 1) else varName
+
+                            val altVarName = if (flag) {
                                 "`alt${cleanName.replaceFirstChar { it.uppercase() }}`"
                             } else {
                                 "alt${cleanName.replaceFirstChar { it.uppercase() }}"
                             }
 
-                            if (isBackticked) {
+                            if (flag) {
                                 modifiedLine = modifiedLine.replace(varName, altVarName)
                             } else {
                                 val varRegex = varReplaceRegexProp.replace("%s", cleanName).toRegex()
@@ -220,6 +219,10 @@ tasks.register("prepareAltSources") {
 
 sourceSets {
     create("alt") {
+
+        val altSrcName = project.findProperty("sn.alt.src.dir.name").toString()
+        val altSourceDir = layout.buildDirectory.dir(altSrcName)
+
         java.srcDir(altSourceDir)
         compileClasspath += sourceSets.main.get().compileClasspath
     }
@@ -230,6 +233,8 @@ tasks.named("compileAltKotlin") {
 }
 
 tasks.register<Jar>("altJar") {
+
+    val fileFilter2 = project.findProperty("sn.alt.regex.files.filter2").toString()
 
     val projectResourcesPath = project.findProperty("sn.project.resources_path")
 
@@ -243,7 +248,7 @@ tasks.register<Jar>("altJar") {
     from(sourceSets["alt"].output)
 
     from(projectResourcesPath.toString()) {
-        include("**/*")
+        include(fileFilter2)
     }
 
     doLast {
